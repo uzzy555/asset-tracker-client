@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import React from "react";
+import { NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../css/sidebar.css";
-import Title from "./Title";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const MenuItem = ({ iconName, title, isActive, url }) => {
   let menuClass = "menu-item";
@@ -21,8 +21,9 @@ const MenuItem = ({ iconName, title, isActive, url }) => {
   );
 };
 
-const SideBar = ({ contract, account, activeLink }) => {
+const SideBar = ({ activeLink }) => {
   const navigate = useNavigate();
+  const { role } = useSelector((state) => state.Auth.UserLoggedInData.userInfo);
   return (
     <React.Fragment>
       <div id="sidebar-container">
@@ -33,33 +34,38 @@ const SideBar = ({ contract, account, activeLink }) => {
             style={{ cursor: "pointer", marginTop: 20 }}
             onClick={() => navigate(-1)}
           />
-          <h4 className="wallet-addr-txt">
-            Wallet Address:
-            {account.substring(0, 4) +
-              "..." +
-              account.substring(account.length - 4, account.length)}
-          </h4>
         </div>
 
         <div id="menu-item-container">
           <MenuItem
             iconName={"fa-solid fa-truck"}
-            title="Track Products."
+            title="All Products."
             isActive={activeLink === "products"}
             url="/vendor/products"
           />
-          <MenuItem
-            iconName={"fa-solid fa-shirt"}
-            title="Add Product."
-            isActive={activeLink === "addproduct"}
-            url="/vendor/addproduct"
-          />
-          <MenuItem
-            iconName={"fa-solid fa-user"}
-            title="Distributors."
-            isActive={activeLink === "available-distributors"}
-            url="/vendor/available-distributors"
-          />
+          {role === "manufacturer" && (
+            <>
+              {" "}
+              <MenuItem
+                iconName={"fa-solid fa-shirt"}
+                title="Add Product."
+                isActive={activeLink === "addproduct"}
+                url="/vendor/addproduct"
+              />
+              <MenuItem
+                iconName={"fa-solid fa-user"}
+                title="Distributors."
+                isActive={activeLink === "available-distributors"}
+                url="/vendor/available-distributors"
+              />
+              <MenuItem
+                iconName={"fa-solid fa-user"}
+                title="Invite Distributor"
+                isActive={activeLink === "invite-distributors"}
+                url="/vendor/invite-distributors"
+              />
+            </>
+          )}
         </div>
       </div>
     </React.Fragment>

@@ -1,44 +1,41 @@
 import React, { useState, useEffect } from "react";
 import { QrReader } from "react-qr-reader";
 import axios from "axios";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../css/Authenticate.css";
-const Authenticate = ({ account }) => {
-  const [auth, setAuth] = useState(false);
-  const [message, setMessage] = useState("");
+import ReactModal from "react-modal";
+const Authenticate = (props) => {
+  const [data, setData] = useState({});
+  const [showModal, setShowModal] = React.useState(false);
+  const handleModalClose = () => {
+    setShowModal(false);
+  };
   return (
     <>
+      <QrModal
+        data={data}
+        modalIsOpen={showModal}
+        closeModal={handleModalClose}
+      />
       <div className="cam">
-        <h4 style={{ color: "#000", position: "fixed", right: 8, top: 2 }}>
-          Wallet Address:{" "}
-          {account.substring(0, 4) +
-            "..." +
-            account.substring(account.length - 4, account.length)}
-        </h4>
         <br />
         <h2 style={{ position: "absolute", top: 20 }}>
           Hold QR Code Steady and Clear to Scan
         </h2>
-        <QrReader
-          onResult={async (result, error) => {
-            if (!!result && !!result?.text) {
-              let data = JSON.parse(result?.text);
-              if (data.hash) {
-                let res = await axios.get(
-                  `https://api-goerli.etherscan.io/api?module=proxy&action=eth_getTransactionByHash&txhash=${data.hash}&apikey=${process.env.REACT_APP_ETHERSCAN_API_KEY}`
-                );
-                if (res) {
-                  setMessage("Product is Authenticated ✅");
-                  setAuth(true);
-                }
+        <div id="scanner">
+          <QrReader
+            delay={500}
+            {...props}
+            onError={() => console.log("Error")}
+            onResult={(result) => {
+              if (result) {
+                setData(result);
+                console.log("data");
+                // console.log(result);
               }
-            }
-            if (!!error) {
-              console.info(error);
-            }
-          }}
-          style={{ width: "100%" }}
-        />
+            }}
+          />
+        </div>
         <div
           style={{
             position: "absolute",
@@ -48,11 +45,7 @@ const Authenticate = ({ account }) => {
             alignItems: "center",
             top: "50%",
           }}
-        >
-          <div>
-            <h1>{message}</h1>
-          </div>
-        </div>
+        ></div>
         <div style={{ position: "absolute", bottom: 90 }}>
           <h3>
             Please wait for 15 sec if Authentication messages is not appearing
@@ -67,3 +60,55 @@ const Authenticate = ({ account }) => {
 };
 
 export default Authenticate;
+const QrModal = ({ modalIsOpen, closeModal, data }) => {
+  const customStyles = {
+    content: {
+      top: "50%",
+      left: "50%",
+      right: "auto",
+      bottom: "auto",
+      marginRight: "-50%",
+      transform: "translate(-50%, -50%)",
+      width: "600px",
+      height: "580px",
+      borderRadius: "20px",
+      backgroundClip: "text",
+    },
+  };
+  return (
+    <ReactModal
+      isOpen={modalIsOpen}
+      onRequestClose={closeModal}
+      style={customStyles}
+      contentLabel="QrCode Modal"
+      ariaHideApp={false}
+    >
+      <div style={{ textAlign: "center", marginTop: 10 }}>
+        <img
+          src={`http://localhost:8000/assets/products/${data.image}`}
+          alt={data.name}
+          height={100}
+          width={100}
+        />
+        <div>
+          <h3>{data.name}</h3>
+          <h3>{data.description}</h3>
+          <h3>{data.cost}</h3>
+        </div>
+      </div>
+
+      <span
+        onClick={closeModal}
+        style={{
+          position: "absolute",
+          top: 3,
+          right: 20,
+          fontSize: 28,
+          cursor: "pointer",
+        }}
+      >
+        <FontAwesomeIcon icon="fa-solid fa-xmark" />
+      </span>
+    </ReactModal>
+  );
+};
