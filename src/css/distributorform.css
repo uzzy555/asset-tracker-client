@@ -2,7 +2,15 @@ body {
   min-height: 100vh;
   width: 100vw;
 }
-
+.walletContainer {
+  display: flex;
+  align-items: center;
+  font-size: 30px;
+  gap: 10px;
+}
+.walletContainer svg {
+  cursor: pointer;
+}
 .form {
   height: auto;
   width: 600px;
@@ -11,7 +19,7 @@ body {
     rgba(255, 255, 255, 0.3) 0%,
     rgba(255, 255, 255, 0.1) 100%
   ); */
-  background-color: #F7FAFF;
+  background-color: #f7faff;
   position: absolute;
   transform: translate(-50%, -50%);
   top: 50%;
@@ -41,7 +49,7 @@ body {
   text-align: center;
 }
 
-.form-title{
+.form-title {
   color: var(--primaryColor);
 }
 
@@ -61,7 +69,7 @@ body {
   height: 50px;
   width: 100%;
   background-color: rgba(255, 255, 255, 0.1);
-   border: 0.75px solid #000000;
+  border: 0.75px solid #000000;
   border-radius: 3px;
   padding: 0 10px;
   margin-top: 9px;
@@ -88,5 +96,4 @@ body {
   cursor: pointer;
   margin: 0px auto;
   margin-top: 3rem;
-
 }

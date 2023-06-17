@@ -1,13 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import SideBar from "./SideBar";
 import MainBar from "./MainBar";
 import "../css/products.css";
+import { useSelector } from "react-redux";
+import WalletConnect from "./connectWallet";
 
 const Greetings = () => {
+  const {
+    UserLoggedInData: {
+      userInfo: {
+        name,
+        organization_name,
+        wallet_address,
+        email,
+        org_code,
+        role,
+      },
+    },
+  } = useSelector((state) => state.Auth);
   return (
     // <div id="get-started">
-    <MainBar pageTitle="Welcome to manufacturer dashboard">
+    <MainBar pageTitle={`Welcome to Asset Tracker dashboard`}>
       {/* <h1 className="mfr-greetings"></h1> */}
       <h1 className="secondary-txt">
         Navigate to profile to view all your registered details
@@ -19,41 +33,20 @@ const Greetings = () => {
       <h1 className="secondary-txt">
         Navigate to Add Products to publish a new product to our system
       </h1>
+
+      {organization_name && <h1>Name:{organization_name}</h1>}
+      {name && <h1>Name:{name}</h1>}
+      <h1>Wallet Address:{wallet_address}</h1>
+      <h1>Email:{email}</h1>
+      {org_code && <h1>Code:{org_code}</h1>}
     </MainBar>
     // </div>
   );
 };
 
-const GetStarted = ({ contract, account }) => {
-  console.log("get started", account);
-  const [show, setShow] = useState(false);
+const GetStarted = () => {
   const { pathname } = useLocation();
 
-  console.log(account);
-
-  const checkAccount = () => {
-    setShow(account === process.env.REACT_APP_WALLET_ADD);
-    console.log("account === process.env.REACT_APP_WALLET_ADD",account === process.env.REACT_APP_WALLET_ADD);
-  };
-
-  useEffect(() => {
-    checkAccount();
-  }, []);
-
-  if (!show) {
-    return (
-      <div>
-        <div style={{ textAlign: "center", marginTop: 40 }}>
-          <h2 className="primary-txt">OOPs 🙊 your company is not registerd</h2>
-          <p className="primary-txt">
-            Please do register your company to avail our services
-          </p>
-          <br />
-          <a href="/google.com">Proceed to the Home Page</a>
-        </div>
-      </div>
-    );
-  }
   const arrURL = pathname.split("/");
   let currentPageURL = arrURL[2];
   let isLinkPage;
@@ -65,11 +58,7 @@ const GetStarted = ({ contract, account }) => {
 
   return (
     <div className="main-container">
-      <SideBar
-        activeLink={currentPageURL}
-        contract={contract}
-        account={account}
-      />
+      <SideBar activeLink={currentPageURL} />
       {isLinkPage && <Greetings />}
       <Outlet />
     </div>

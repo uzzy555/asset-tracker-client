@@ -4,382 +4,19 @@ import styled, { createGlobalStyle } from "styled-components";
 import { useForm, useField, splitFormProps } from "react-form";
 import { useTable } from "react-table";
 import QRCode from "qrcode.react";
-import Modal from "react-modal";
-import "./VendorForm.css";
+import "../css/addProduct.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Title from "./Title";
 import MainBar from "./MainBar";
-
-const TableInput = (props) => {
-  console.log("TableInput", props);
-  const { column, row, cell, updateData } = props;
-  const onChange = (e) => updateData(row.index, column.id, e.target.value);
-  return (
-    <input
-      type="number"
-      value={cell.value}
-      onChange={onChange}
-      className="cell-input"
-    />
-  );
-};
-
-const ItemName = (props) => {
-  console.log("ItemName", props);
-  const { column, row, cell, updateData } = props;
-  const onChange = (e) => updateData(row.index, column.id, e.target.value);
-  return (
-    <input
-      type="text"
-      value={cell.value}
-      onChange={onChange}
-      className="cell-input"
-    />
-  );
-};
-
-const StyledTable = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  th,
-  td {
-    width: 25%;
-    text-align: center;
-    border: 1px solid lightgray;
-    padding: 5px;
-  }
-`;
-const ReactTable = React.memo((props) => {
-  console.log("ReactTable", props);
-  const { setAmountDue } = props;
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: "Item",
-        accessor: "item",
-        Cell: ItemName,
-      },
-      {
-        Header: "Item Description",
-        accessor: "description",
-        Cell: ItemName,
-      },
-      {
-        Header: "Cost (INR)",
-        accessor: "cost",
-        Cell: TableInput,
-      },
-      {
-        Header: "Quantity",
-        accessor: "quantity",
-        Cell: TableInput,
-      },
-      {
-        Header: "Total (INR)",
-        accessor: (row) => row.cost * row.quantity,
-        id: "total",
-      },
-    ],
-    []
-  );
-  const initialData = [
-    {
-      item: "Vaccine",
-      description: "Medicine",
-      cost: 1,
-      quantity: 2,
-    },
-  ];
-  const [data, setData] = React.useState(initialData);
-  const resetData = () => setData(initialData);
-
-  const updateData = (rowIndex, columnID, value) => {
-    setData((oldData) =>
-      oldData.map((row, index) => {
-        if (index === rowIndex) {
-          return {
-            ...oldData[rowIndex],
-            [columnID]: value,
-          };
-        }
-        return row;
-      })
-    );
-  };
-  const table = useTable({ columns, data, updateData });
-  const { getTableProps, headerGroups, rows, prepareRow } = table;
-  const tableSum = rows.reduce((sum, row) => sum + row.values.total, 0);
-  console.log("setAmountDue", tableSum);
-  setAmountDue(tableSum);
-
-  const [modalIsOpen, setIsOpen] = React.useState(false);
-  const [qrcode, setQrcode] = React.useState(null);
-  const [hash, setHash] = React.useState(null);
-  const [assetMessage, setAssetMessage] = React.useState("Create");
-  const [assetModalIsOpen, setAssetModalIsOpen] = React.useState(false);
-  const [assetDetails, setAssetDetails] = React.useState([]);
-
-  const closeModal = () => {
-    setQrcode(null);
-    setIsOpen(false);
-  };
-
-  const assetcloseModal = () => {
-    setAssetModalIsOpen(false);
-  };
-
-  const customStyles = {
-    content: {
-      top: "50%",
-      left: "50%",
-      right: "auto",
-      bottom: "auto",
-      marginRight: "-50%",
-      transform: "translate(-50%, -50%)",
-      width: "600px",
-      height: "580px",
-      borderRadius: "20px",
-      backgroundClip: "text",
-    },
-  };
-  const assetModalStyles = {
-    content: {
-      top: "50%",
-      left: "50%",
-      right: "auto",
-      bottom: "auto",
-      marginRight: "-50%",
-      transform: "translate(-50%, -50%)",
-      width: "600px",
-      height: "400px",
-      borderRadius: "20px",
-      backgroundClip: "text",
-    },
-  };
-
-  return (
-    <>
-      <Modal
-        isOpen={modalIsOpen}
-        onRequestClose={closeModal}
-        style={customStyles}
-        contentLabel="QrCode Modal"
-        ariaHideApp={false}
-      >
-        <div style={{ textAlign: "center", marginTop: 10 }}>
-          <PaymentQRCode size={500} value={`${qrcode}`} />
-        </div>
-
-        <span
-          onClick={closeModal}
-          style={{
-            position: "absolute",
-            top: 3,
-            right: 20,
-            fontSize: 28,
-            cursor: "pointer",
-          }}
-        >
-          <FontAwesomeIcon icon="fa-solid fa-xmark" />
-        </span>
-      </Modal>
-      <Modal
-        isOpen={assetModalIsOpen}
-        onRequestClose={assetcloseModal}
-        style={assetModalStyles}
-        contentLabel="Asset Modal"
-        ariaHideApp={false}
-      >
-        <div style={{ textAlign: "center", marginTop: 10, color: "black" }}>
-          <h2>Name:{assetDetails[0]}</h2>
-          <h2>Description:{assetDetails[1]}</h2>
-          <h2>Quantity:{assetDetails[8]}</h2>
-          <h2>Cost:{assetDetails[7]}</h2>
-          <h2>Manufacturer:{assetDetails[2]}</h2>
-          <h2>Consumer:{assetDetails[3]}</h2>
-          <h2>AddressFrom:{assetDetails[4]}</h2>
-          <h2>AddressTo:{assetDetails[5]}</h2>
-        </div>
-
-        <span
-          onClick={assetcloseModal}
-          style={{
-            position: "absolute",
-            top: 3,
-            right: 20,
-            fontSize: 28,
-            cursor: "pointer",
-          }}
-        >
-          <FontAwesomeIcon icon="fa-solid fa-xmark" />
-        </span>
-      </Modal>
-
-      <br />
-      <StyledTable {...getTableProps()}>
-        <thead>
-          {headerGroups.map((headerGroup) => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => (
-                <th {...column.getHeaderProps()}>{column.render("Header")}</th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {rows.map((row) => {
-            prepareRow(row);
-            return (
-              <tr {...row.getRowProps()}>
-                {row.cells.map((cell) => (
-                  <td {...cell.getCellProps()}>{cell.render("Cell")}</td>
-                ))}
-              </tr>
-            );
-          })}
-          <tr>
-            <td colSpan={3}>
-              <button type="button" onClick={resetData} className="btn">
-                Reset Table
-              </button>
-            </td>
-            <br />
-            <button
-              type="submit"
-              onClick={async (e) => {
-                console.log("id:", props.distributorId);
-                console.log(
-                  !data[0].item,
-                  !data[0].description,
-                  !data[0].cost,
-                  !data[0].quantity,
-                  !props.vendorName,
-                  !props.consumerName,
-                  !props.vendorAdd,
-                  !props.consumerAdd,
-                  !props.distributorId
-                );
-                if (
-                  !data[0].item ||
-                  !data[0].description ||
-                  !data[0].cost ||
-                  !data[0].quantity ||
-                  !props.vendorName ||
-                  !props.consumerName ||
-                  !props.vendorAdd ||
-                  !props.consumerAdd ||
-                  props.distributorId<0
-                ) {
-                  setAssetMessage("Plese fill all the fields");
-                } else {
-                  setAssetMessage("Creating...");
-                  e.preventDefault();
-                  console.log(
-                    data[0].item,
-                    data[0].description,
-                    data[0].cost,
-                    data[0].quantity,
-                    props.vendorName,
-                    props.consumerName,
-                    props.vendorAdd,
-                    props.consumerAdd,
-                    props.distributorId
-                  );
-                  let asset = await props.contract.createAsset(
-                    data[0].item,
-                    data[0].description,
-                    props.distributorId,
-                    data[0].cost,
-                    data[0].quantity,
-                    props.vendorName,
-                    props.consumerName,
-                    props.vendorAdd,
-                    props.consumerAdd
-                  );
-                  await asset.wait();
-                  console.log("asset created", asset.hash);
-                  setHash(asset.hash);
-                  if (asset.hash) {
-                    const info = {
-                      name: data[0].item,
-                      description: data[0].description,
-                      distributorId: props.distributorId,
-                      cost: data[0].cost,
-                      quantity: data[0].quantity,
-                      vendorName: props.vendorName,
-                      consumerName: props.consumerName,
-                      vendorAdd: props.vendorAdd,
-                      consumerAdd: props.consumerAdd,
-                      hash: asset.hash,
-                    };
-                    let strData = JSON.stringify(info);
-                    setQrcode(strData);
-                    try {
-                      let distributor = await props.contract.getDistributorbyId(
-                        props.distributorId
-                      );
-                      console.log(distributor[2]);
-                      if (distributor[2]) {
-                        let body = `Deliver to the given address: ${props.consumerAdd}`;
-                        // const options = {
-                        //   method: "POST",
-                        //   url: "https://rapidprod-sendgrid-v1.p.rapidapi.com/mail/send",
-                        //   headers: {
-                        //     "content-type": "application/json",
-                        //     "X-RapidAPI-Host":
-                        //       "rapidprod-sendgrid-v1.p.rapidapi.com",
-                        //     "X-RapidAPI-Key":
-                        //       process.env.REACT_APP_RAPID_API_KEY,
-                        //   },
-                        //   data: `{"personalizations":[{"to":[{"email":"${distributor[2]}"}],"subject":"Dispatch Item"}],"from":{"email":"rp589006@gmail.com"},"content":[{"type":"text/plain","value":"${body}"}]}`,
-                        // };
-                        const options = {
-                          method: "POST",
-                          url: `https://api.mailslurp.com/sendEmail?apiKey=${process.env.REACT_APP_RAPID_API_KEY}`,
-                          
-                          // data: `{"personalizations":[{"to":[{"email":"${distributor[2]}"}],"subject":"Dispatch Item"}],"from":{"email":"rp589006@gmail.com"},"content":[{"type":"text/plain","value":"${body}"}]}`,
-                          data: {
-                            senderId: "mufaddalshakir55@gmail.com",
-                            to: distributor[2],
-                            subject: "Dispatch Item",
-                            body: body,
-                          },
-                        };
-                        axios
-                          .request(options)
-                          .then(function (response) {
-                            console.log("Email Succesfully Send");
-                          })
-                          .catch(function (error) {
-                            console.error("Unable to send the mail");
-                          });
-                        setAssetMessage("Create");
-                        setIsOpen(true);
-                      } else {
-                        console.log("distributor does not exixts");
-                        return;
-                      }
-                    } catch (e) {
-                      console.log(e);
-                    }
-                  } else {
-                    console.log("unable to create asset");
-                  }
-                }
-              }}
-              className="btn"
-              style={{ marginLeft: "40%" }}
-            >
-              {assetMessage}
-            </button>
-          </tr>
-        </tbody>
-      </StyledTable>
-    </>
-  );
-});
+import ImageUpload from "./imageUpload";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllDistributors } from "../redux/distributors/distributors.actions";
+import { useFormik } from "formik";
+import { addProduct } from "../redux/product/product.actions";
+import { mixed, object, string } from "yup";
+import TransactionModal from "./transactionModal";
 
 const FormStyles = styled.div`
   form {
@@ -390,8 +27,9 @@ const FormStyles = styled.div`
       align-items: center;
     }
     aside {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 10px;
     }
     section {
       flex: 1 1 auto;
@@ -406,132 +44,179 @@ const FormStyles = styled.div`
     }
   }
 `;
-const AmountDue = styled.label`
-  margin: 10px;
-  font-size: 1.5em;
-  align-self: flex-end;
-`;
-const PaymentQRCode = styled(QRCode)`
-  padding: 5px;
-  align-self: flex-end;
-`;
 
-const ReactForm = (props) => {
-  console.log("ReactForm", props);
+const ReactForm = () => {
   const navigate = useNavigate();
-  const { amountDue, setAmountDue, distributors } = props;
-  const defaultValues = React.useMemo(
-    () => ({
-      name: "Rohit",
-      dashAddress: "Kalyan",
-      dashAddressto: "Gujrat",
-      notes: "Payment terms: Net 30",
-    }),
-    []
+  const dispatch = useDispatch();
+  const [txInfo, setTxInfo] = useState({
+    txStatus: null,
+    txMessage: null,
+    txHash: null,
+  });
+  const { allDistributors, isProductAdded } = useSelector(
+    (state) => state.Distributors
   );
-  const onSubmit = async (values, instance) => {
-    console.log("Form values:", values);
-    instance.reset();
-  };
-  const form = useForm({ defaultValues, onSubmit });
-  const { Form, values, meta } = form;
 
-  const [vendorName, setVendorName] = React.useState("");
-  const [vendorAdd, setVendorAdd] = React.useState("");
-  const [consumerAdd, setConsumerAdd] = React.useState("");
-  const [consumerName, setConsumerName] = React.useState("");
-  const [distributorId, setDistributorId] = React.useState(0);
+  const {
+    userInfo: { wallet_address, org_code, organization_name },
+  } = useSelector((state) => state.Auth.UserLoggedInData);
+
+  const formik = useFormik({
+    initialValues: {
+      file: "",
+      product_name: "",
+      product_description: "",
+      d_wallet_address: "",
+      cost: "",
+      quantity: "",
+    },
+    validationSchema: object().shape({
+      file: mixed("")
+        .test(
+          "image",
+          "Please select a valid image or video.",
+          (file) =>
+            file &&
+            /\.(jpg|jpeg|png|gif|tiff|tif|heif|heic|svg|svgz|ai|mp4|ogg|webm|mov)$/.test(
+              file.name.toLowerCase()
+            )
+        )
+        .required("Image is required"),
+      product_name: string().required("Name is required"),
+      product_description: string().required("Description is required"),
+      d_wallet_address: string().required("Select a distributor"),
+      cost: string().required(),
+      quantity: string().required(),
+    }),
+    onSubmit: async (values) => {
+      const payload = {
+        file: values.file,
+        name: values.product_name,
+        description: values.product_description,
+        m_wallet_address: wallet_address,
+        d_wallet_address: values.d_wallet_address,
+        cost: values.cost,
+        quantity: values.quantity,
+        manufacturer: organization_name,
+      };
+
+      dispatch(addProduct({ setTxInfo, ...payload }));
+    },
+  });
+  const handleModalClose = () =>
+    setTxInfo({
+      txStatus: null,
+      txMessage: null,
+      txHash: null,
+    });
+  useEffect(() => {
+    dispatch(getAllDistributors(org_code));
+  }, [dispatch, formik.values, isProductAdded, org_code]);
   return (
     <>
-      {/* <FontAwesomeIcon
-        icon="fa-solid fa-arrow-left"
-        className="menu-icon"
-        style={{ cursor: "pointer", marginTop: 20 }}
-        onClick={() => navigate(-1)}
-      /> */}
-
+      <TransactionModal txInfo={txInfo} onClose={handleModalClose} />
       <FormStyles style={{ marginTop: "40px" }}>
-        <Form>
+        <form className="add-form" onSubmit={formik.handleSubmit}>
+          <h2 className="form-title">Add Product</h2>
+          <br />
           <aside>
             <section>
-              <div className="info-container">
-                <label className="label">
-                  Manufacturer :{" "}
-                  <input
-                    type="text"
-                    className="VendorInfo"
-                    onChange={(e) => {
-                      e.preventDefault();
-                      setVendorName(e.target.value);
-                    }}
-                  />
-                </label>
-                <label className="label">
-                  Consumer :{" "}
-                  <input
-                    type="text"
-                    className="VendorInfo"
-                    onChange={(e) => {
-                      e.preventDefault();
-                      setConsumerName(e.target.value);
-                    }}
-                  />
-                </label>
-                <label className="label">
-                  Address From:
-                  <input
-                    type="text"
-                    className="VendorInfo"
-                    onChange={(e) => {
-                      e.preventDefault();
-                      setVendorAdd(e.target.value);
-                    }}
-                  />
-                </label>
-                <label className="label">
-                  Address To:
-                  <input
-                    type="text"
-                    className="VendorInfo"
-                    onChange={(e) => {
-                      e.preventDefault();
-                      setConsumerAdd(e.target.value);
-                    }}
-                  />
-                </label>
-                <label className="label">
-                  Distributors:
-                  <select
-                    className="VendorInfo"
-                    value={distributorId}
-                    onChange={(e) => {
-                      setDistributorId(e.target.value);
-                    }}
-                  >
-                    {distributors.map((d, i) => (
-                      <option key={i} value={i}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <ImageUpload
+                value={formik.values.file}
+                formik={formik}
+                helperText={
+                  (formik.touched.file && formik.errors.file) || `&nbsp;`
+                }
+                error={formik.touched.file && Boolean(formik.errors.file)}
+              />
             </section>
             <section>
-              <AmountDue>Amount Due: {amountDue} INR</AmountDue>
+              <label className="lable">Name</label>
+              <input
+                type="text"
+                placeholder="Name"
+                name="product_name"
+                className="input"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              {formik.touched.product_name && (
+                <small style={{ color: "red" }}>
+                  {formik.errors.product_name}
+                </small>
+              )}
+              <br />
+              <label className="lable">Description</label>
+              <textarea
+                type="text"
+                placeholder="Product description"
+                name="product_description"
+                rows="5"
+                className="input"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              {formik.touched.product_description && (
+                <small style={{ color: "red" }}>
+                  {formik.errors.product_description}
+                </small>
+              )}
+              <br />
+              <label className="lable">Cost</label>
+              <input
+                type="text"
+                placeholder="Cost"
+                name="cost"
+                className="input"
+                required
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              {formik.touched.cost && (
+                <small style={{ color: "red" }}>{formik.errors.cost}</small>
+              )}
+              <br />
+              <label className="lable">Quantity</label>
+              <input
+                type="text"
+                placeholder="Quantity"
+                name="quantity"
+                className="input"
+                required
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              {formik.touched.quantity && (
+                <small style={{ color: "red" }}>{formik.errors.quantity}</small>
+              )}
+
+              <br />
+
+              <label className="lable">Distributors:</label>
+              <select
+                className="VendorInfo"
+                name="d_wallet_address"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              >
+                <option value="">Select</option>
+                {allDistributors.map(({ name, id }, i) => (
+                  <option key={i} value={id}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              {formik.touched.d_wallet_address && (
+                <small style={{ color: "red" }}>
+                  {formik.errors.d_wallet_address}
+                </small>
+              )}
+              <button className="button" type="submit">
+                Add
+              </button>
             </section>
           </aside>
-          <ReactTable
-            setAmountDue={setAmountDue}
-            contract={props.contract}
-            vendorName={vendorName}
-            consumerName={consumerName}
-            vendorAdd={vendorAdd}
-            consumerAdd={consumerAdd}
-            distributorId={distributorId}
-          />
-          <br />
-        </Form>
+        </form>
       </FormStyles>
     </>
   );
@@ -541,17 +226,15 @@ const Main = styled.main`
   border-radius: 5px;
   padding: 10px;
   background: white;
-  height: 100vh;
   h2 {
     text-align: center;
   }
 `;
 const Invoice = (props) => {
-  console.log("Invoice", props);
   const [amountDue, setAmountDue] = React.useState(0);
 
   return (
-    <Main>
+    <MainBar>
       <ReactForm
         amountDue={amountDue}
         setAmountDue={setAmountDue}
@@ -559,7 +242,7 @@ const Invoice = (props) => {
         contract={props.contract}
         distributors={props.distributors}
       />
-    </Main>
+    </MainBar>
   );
 };
 
@@ -567,7 +250,7 @@ const App = (props) => {
   const [distributors, setDistributors] = useState([]);
   const getDistributors = async () => {
     let dis = await props.contract.getAlldistributors();
-    console.log("distributors Id: ",dis);
+    console.log("distributors Id: ", dis);
     setDistributors(dis);
   };
   useEffect(() => {

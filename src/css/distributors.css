@@ -28,3 +28,7 @@
   font-weight: bold;
   color: #551a8a;
 }
+.box {
+  display: grid;
+  place-content: center;
+}
